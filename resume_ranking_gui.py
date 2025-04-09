@@ -786,67 +786,241 @@ class ModernResumeRankingGUI:
             messagebox.showerror("Error", f"Failed to process resume: {str(e)}")
             
     def process_resume(self, resume_path):
-        # Update progress
+        """
+        Process a resume using the hybrid matching approach from the notebook.
+        """
         self.progress_var.set(10)
         self.root.update()
-        
-        # Extract text from PDF
-        doc = fitz.open(resume_path)
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        
-        self.progress_var.set(30)
-        self.root.update()
-        
-        # Load job description
+
         try:
-            with open('job_description.txt', 'r') as f:
-                job_desc = f.read().strip()
-        except FileNotFoundError:
-            job_desc = "Sample job description"
-        
-        # Get transformer embeddings using sentence-transformers
-        resume_embedding = self.model.encode(text, convert_to_tensor=True)
-        job_embedding = self.model.encode(job_desc, convert_to_tensor=True)
-        
-        # Calculate transformer score using sentence-transformers util
-        transformer_score = util.pytorch_cos_sim(job_embedding, resume_embedding)[0][0].item()
-        
-        self.progress_var.set(60)
-        self.root.update()
-        
-        # Get TF-IDF score
-        vectorizer = TfidfVectorizer()
-        tfidf_matrix = vectorizer.fit_transform([text, job_desc])
-        tfidf_score = sklearn_cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-        
-        self.progress_var.set(80)
-        self.root.update()
-        
-        # Get section scores using spaCy
-        doc = self.nlp(text)
-        job_doc = self.nlp(job_desc)
-        section_score = doc.similarity(job_doc)
-        
-        self.progress_var.set(100)
-        self.root.update()
-        
-        return {
-            'transformer_score': transformer_score,
-            'tfidf_score': tfidf_score,
-            'section_score': section_score,
-            'combined_score': (
-                transformer_score * 0.4 +
-                tfidf_score * 0.3 +
-                section_score * 0.3
-            ),
-            'section_details': {
-                'experience': 0.8,
-                'education': 0.7,
-                'skills': 0.6
+            # Extract text from PDF with proper encoding handling
+            doc = fitz.open(resume_path)
+            resume_text = ""
+            for page in doc:
+                resume_text += page.get_text()
+            doc.close()
+            
+            # Load job description with UTF-8 encoding
+            try:
+                with open("D:/ATOMS/jobfiles/normalized_jobs.json", 'r', encoding='utf-8') as f:
+                    job_data = json.load(f)
+                    current_job = job_data[0]  # Use first job for now
+            except UnicodeDecodeError:
+                with open("D:/ATOMS/jobfiles/normalized_jobs.json", 'r', encoding='latin-1') as f:
+                    job_data = json.load(f)
+                    current_job = job_data[0]
+            
+            self.progress_var.set(30)
+            self.root.update()
+
+            # 1. Transformer-based matching
+            resume_embedding = self.model.encode(resume_text, convert_to_tensor=True)
+            job_embedding = self.model.encode(current_job["structured_text"], convert_to_tensor=True)
+            transformer_score = float(util.pytorch_cos_sim(job_embedding, resume_embedding)[0][0].cpu())
+
+            self.progress_var.set(50)
+            self.root.update()
+
+            # 2. Custom TF-IDF matching for two documents
+            tfidf_score = self.calculate_custom_similarity(current_job["structured_text"], resume_text)
+
+            self.progress_var.set(70)
+            self.root.update()
+
+            # 3. Section-based matching
+            section_comparisons = {
+                'experience': {'job_sections': ['experience'], 'weight': 0.35},
+                'education': {'job_sections': ['education'], 'weight': 0.15},
+                'skills': {'job_sections': ['skills', 'requirements'], 'weight': 0.30},
+                'summary': {'job_sections': ['summary', 'description'], 'weight': 0.20},
             }
+
+            resume_sections = self.extract_sections(resume_text)
+            job_sections = current_job.get("sections", {})
+            
+            section_scores = {}
+            weighted_section_score = 0
+            total_weight = 0
+
+            for section_type, config in section_comparisons.items():
+                if section_type in resume_sections:
+                    resume_section_text = resume_sections[section_type]
+                    
+                    job_section_texts = []
+                    for job_section in config['job_sections']:
+                        if job_section in job_sections:
+                            job_section_texts.append(job_sections[job_section])
+
+                    if job_section_texts and resume_section_text:
+                        job_section_text = " ".join(job_section_texts)
+                        
+                        try:
+                            section_job_embedding = self.model.encode(job_section_text, convert_to_tensor=True)
+                            section_resume_embedding = self.model.encode(resume_section_text, convert_to_tensor=True)
+                            similarity = float(util.pytorch_cos_sim(section_job_embedding, section_resume_embedding)[0][0].cpu())
+                        except UnicodeEncodeError:
+                            job_section_text = job_section_text.encode('ascii', 'ignore').decode('ascii')
+                            resume_section_text = resume_section_text.encode('ascii', 'ignore').decode('ascii')
+                            section_job_embedding = self.model.encode(job_section_text, convert_to_tensor=True)
+                            section_resume_embedding = self.model.encode(resume_section_text, convert_to_tensor=True)
+                            similarity = float(util.pytorch_cos_sim(section_job_embedding, section_resume_embedding)[0][0].cpu())
+                        
+                        section_scores[section_type] = similarity
+                        weighted_section_score += similarity * config['weight']
+                        total_weight += config['weight']
+
+            section_score = weighted_section_score / total_weight if total_weight > 0 else 0.0
+
+            self.progress_var.set(90)
+            self.root.update()
+
+            # Calculate combined score
+            combined_score = (
+                transformer_score * 0.4 +    # 40% transformer
+                tfidf_score * 0.3 +         # 30% TF-IDF
+                section_score * 0.3          # 30% section-based
+            )
+
+            self.progress_var.set(100)
+            self.root.update()
+
+            return {
+                'transformer_score': transformer_score,
+                'tfidf_score': tfidf_score,
+                'section_score': section_score,
+                'combined_score': combined_score,
+                'section_details': section_scores
+            }
+
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            raise Exception(f"Failed to process resume: {str(e)}\n\nDetails:\n{error_details}")
+
+    def calculate_custom_similarity(self, text1, text2):
+        """
+        Calculate a custom similarity score between two texts using a simplified TF-IDF approach
+        """
+        import re
+        from collections import Counter
+        import math
+        
+        def preprocess_text(text):
+            # Convert to lowercase and split into words
+            text = text.lower()
+            # Remove special characters and split
+            words = re.findall(r'\w+', text)
+            # Remove common English stop words
+            stop_words = set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'])
+            words = [w for w in words if w not in stop_words]
+            return words
+        
+        # Preprocess both texts
+        words1 = preprocess_text(text1)
+        words2 = preprocess_text(text2)
+        
+        # Calculate term frequencies
+        tf1 = Counter(words1)
+        tf2 = Counter(words2)
+        
+        # Get unique words from both documents
+        all_words = set(words1 + words2)
+        
+        # Calculate document frequencies
+        df = Counter()
+        for word in all_words:
+            if word in tf1:
+                df[word] += 1
+            if word in tf2:
+                df[word] += 1
+        
+        # Calculate TF-IDF vectors
+        def calculate_tfidf(tf_dict, doc_length):
+            tfidf_dict = {}
+            for word in all_words:
+                tf = tf_dict.get(word, 0) / doc_length
+                idf = math.log(2 / (df[word] + 1)) + 1  # Adding 1 for smoothing
+                tfidf_dict[word] = tf * idf
+            return tfidf_dict
+        
+        tfidf1 = calculate_tfidf(tf1, len(words1))
+        tfidf2 = calculate_tfidf(tf2, len(words2))
+        
+        # Calculate cosine similarity
+        numerator = sum(tfidf1.get(word, 0) * tfidf2.get(word, 0) for word in all_words)
+        magnitude1 = math.sqrt(sum(score * score for score in tfidf1.values()))
+        magnitude2 = math.sqrt(sum(score * score for score in tfidf2.values()))
+        
+        if magnitude1 == 0 or magnitude2 == 0:
+            return 0.0
+        
+        similarity = numerator / (magnitude1 * magnitude2)
+        return similarity
+
+    def extract_sections(self, text):
+        """
+        Extract sections from resume text using spaCy for better accuracy.
+        """
+        # Clean the text before processing
+        try:
+            text = text.encode('utf-8', 'ignore').decode('utf-8')
+        except UnicodeError:
+            text = text.encode('ascii', 'ignore').decode('ascii')
+        
+        sections = {
+            'experience': '',
+            'education': '',
+            'skills': '',
+            'summary': ''
         }
+        
+        # Use spaCy to analyze the text
+        doc = self.nlp(text)
+        
+        # Simple rule-based section extraction
+        current_section = None
+        section_text = []
+        
+        for line in text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Clean the line before processing
+            try:
+                line = line.encode('utf-8', 'ignore').decode('utf-8')
+            except UnicodeError:
+                line = line.encode('ascii', 'ignore').decode('ascii')
+            
+            lower_line = line.lower()
+            if any(keyword in lower_line for keyword in ['experience', 'work history', 'employment']):
+                if current_section:
+                    sections[current_section] = ' '.join(section_text)
+                current_section = 'experience'
+                section_text = []
+            elif any(keyword in lower_line for keyword in ['education', 'academic', 'qualification']):
+                if current_section:
+                    sections[current_section] = ' '.join(section_text)
+                current_section = 'education'
+                section_text = []
+            elif any(keyword in lower_line for keyword in ['skills', 'technical', 'technologies', 'proficiency']):
+                if current_section:
+                    sections[current_section] = ' '.join(section_text)
+                current_section = 'skills'
+                section_text = []
+            elif any(keyword in lower_line for keyword in ['summary', 'profile', 'objective']):
+                if current_section:
+                    sections[current_section] = ' '.join(section_text)
+                current_section = 'summary'
+                section_text = []
+            elif current_section:
+                section_text.append(line)
+        
+        # Add the last section
+        if current_section:
+            sections[current_section] = ' '.join(section_text)
+        
+        return sections
         
     def update_rankings_display(self):
         for item in self.tree.get_children():

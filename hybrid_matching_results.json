@@ -1,5 +1,17 @@
 [
   {
+    "resume_file": "Jacob Lash Resume.pdf",
+    "candidate_name": "kjviugiuv",
+    "transformer_score": 0.6207528114318848,
+    "tfidf_score": 0.27733698147621283,
+    "section_score": 0.3778115923588093,
+    "combined_score": 0.4448456967232606,
+    "section_details": {
+      "experience": 0.1733151078224182,
+      "skills": 0.6163908243179321
+    }
+  },
+  {
     "resume_file": "candidate_074.pdf",
     "candidate_name": "HAYLEE ROGERS SOFTWARE DEVELOPER(AI/ML) PROFESSIONAL PROFILE I am a software developer working with cloud infrastructure and management. I have been part of different projects that were developed on different Machine Learning algorithms. PROFICIENT SKILLS Machine Learning, Deep Learning",
     "transformer_score": 0.7692859768867493,
@@ -869,6 +881,17 @@
     "combined_score": 0.23670119030737063,
     "section_details": {
       "experience": 0.0
+    }
+  },
+  {
+    "resume_file": "2025 BA Resume Bin.docx.pdf",
+    "candidate_name": "john",
+    "transformer_score": 0.3732169270515442,
+    "tfidf_score": 0.051416840858814,
+    "section_score": 0.22884473204612735,
+    "combined_score": 0.23336524269210007,
+    "section_details": {
+      "experience": 0.22884473204612732
     }
   },
   {
