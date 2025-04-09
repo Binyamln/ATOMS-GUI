@@ -255,6 +255,30 @@
     }
   },
   {
+    "resume_file": "Kenzi Resume.pdf",
+    "candidate_name": "ionoinoin",
+    "transformer_score": 0.6247362494468689,
+    "tfidf_score": 0.15891376304089117,
+    "section_score": 0.0536143888508312,
+    "combined_score": 0.31365294534626426,
+    "section_details": {
+      "experience": 0.0,
+      "skills": 0.11616450917680092
+    }
+  },
+  {
+    "resume_file": "Kenzi Resume.pdf",
+    "candidate_name": "ionoinoin",
+    "transformer_score": 0.6247362494468689,
+    "tfidf_score": 0.15891376304089117,
+    "section_score": 0.0536143888508312,
+    "combined_score": 0.31365294534626426,
+    "section_details": {
+      "experience": 0.0,
+      "skills": 0.11616450917680092
+    }
+  },
+  {
     "resume_file": "candidate_129.pdf",
     "candidate_name": "NICHOLAS MENDES FRESHER PROFESSIONAL PROFILE Data Science Enthusiast looking roles in Data Analytics, Machine learning, Statistical Modeling, Data Visualization. PROFICIENT SKILLS Data Analyst, Data Analytics, Data Modeling, Data Validation, R, Text Mining, Statistical Modeling, Python, Tableau,",
     "transformer_score": 0.6996209621429443,
@@ -333,6 +357,18 @@
     "section_details": {
       "experience": 0.0,
       "skills": 0.13857714326012646
+    }
+  },
+  {
+    "resume_file": "Kenzi Resume.pdf",
+    "candidate_name": "kl, lmpomp",
+    "transformer_score": 0.6024972796440125,
+    "tfidf_score": 0.15891376304089117,
+    "section_score": 0.0536143888508312,
+    "combined_score": 0.30475735742512167,
+    "section_details": {
+      "experience": 0.0,
+      "skills": 0.11616450917680092
     }
   },
   {
@@ -514,6 +550,17 @@
     "section_details": {
       "experience": 0.0,
       "skills": 0.11781612820652435
+    }
+  },
+  {
+    "resume_file": "Jacob Lash Resume.pdf",
+    "candidate_name": "wadawdawd",
+    "transformer_score": 0.6201362013816833,
+    "tfidf_score": 0.11822932880111695,
+    "section_score": 0.0,
+    "combined_score": 0.2835232791930084,
+    "section_details": {
+      "experience": 0.0
     }
   },
   {
@@ -738,6 +785,28 @@
     }
   },
   {
+    "resume_file": "Jacob Lash Resume.pdf",
+    "candidate_name": "dwandkand",
+    "transformer_score": 0.6201362013816833,
+    "tfidf_score": 0.0,
+    "section_score": 0.0,
+    "combined_score": 0.24805448055267335,
+    "section_details": {
+      "experience": 0.0
+    }
+  },
+  {
+    "resume_file": "Jacob Lash Resume.pdf",
+    "candidate_name": "vwevvfwsewc",
+    "transformer_score": 0.6201362013816833,
+    "tfidf_score": 0.0,
+    "section_score": 0.0,
+    "combined_score": 0.24805448055267335,
+    "section_details": {
+      "experience": 0.0
+    }
+  },
+  {
     "resume_file": "candidate_097.pdf",
     "candidate_name": "P R O F I L E Fresher looking to join as a data analyst and junior data scientist. Experienced in creating meaningful data dashboards and evaluation models. BIB CONSULTANCY BUSINESS ANALYST, SEP 2019 TO TILL DATE Create and leverage analytical approaches to quantify catastrophe risk using machine learning models and advance statistical concepts to provide account level and portfolio level results for various Insurance and Reinsurance clients. BAILEY MIRL",
     "transformer_score": 0.5614761710166931,
@@ -956,16 +1025,14 @@
     }
   },
   {
-    "resume_file": "2025 BA Resume Bin.docx.pdf",
-    "candidate_name": "John",
-    "transformer_score": 0.08056806772947311,
-    "tfidf_score": 0.039383965879856694,
-    "section_score": 0.2142855773699429,
-    "combined_score": 0.10832809006672911,
+    "resume_file": "Kenzi Resume.pdf",
+    "candidate_name": "POOP",
+    "transformer_score": 0.2122543454170227,
+    "tfidf_score": 0.024084325510200618,
+    "section_score": 0.0,
+    "combined_score": 0.09212703581986927,
     "section_details": {
-      "experience": 0.8,
-      "education": 0.7,
-      "skills": 0.6
+      "experience": 0.0
     }
   }
 ]
